@@ -193,7 +193,11 @@ class CartController extends Controller
                 $item->item = 'Overload Cheese Pizza';
             }
             
+            // Ensure we have a valid image path
             $item->displayImage = $this->getPizzaImagePath($item->item, $item->image);
+            
+            // Log the image path for debugging
+            Log::info("Cart item: {$item->item}, Image path: {$item->displayImage}");
         }
         
         return view('checkout', [
@@ -203,41 +207,49 @@ class CartController extends Controller
     }
 
     /**
-     * Show checkout page
-     * 
-     * @param Request $request
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function checkout(Request $request)
-    {
-        $cartItems = $this->getPendingCartItems();
-        
-        if ($cartItems->isEmpty()) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
-        }
-        
-        $total = $this->calculateCartTotal($cartItems);
-        $orderNumber = 'ORD-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
-        
-        // Store order information in session for the receipt page
-        session([
-            'order_summary' => [
-                'order_number' => $orderNumber,
-                'order_date' => now()->format('M d, Y h:i A'),
-                'items' => $cartItems,
-                'total' => $total
-            ]
-        ]);
-        
-        return view('checkout-summary', [
-            'orderNumber' => $orderNumber,
-            'orderDate' => now()->format('M d, Y h:i A'),
-            'cartItems' => $cartItems,
-            'total' => $total,
-            'user' => Auth::user()
-        ]);
+ * Show checkout page
+ * 
+ * @param Request $request
+ * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+ */
+public function checkout(Request $request)
+{
+    $cartItems = $this->getPendingCartItems();
+    
+    if ($cartItems->isEmpty()) {
+        return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
     }
     
+    // Update image paths for all cart items
+    foreach ($cartItems as $item) {
+        // Ensure we have a valid image path
+        $item->displayImage = $this->getPizzaImagePath($item->item, $item->image);
+        
+        // Log the image path for debugging
+        Log::info("Checkout item: {$item->item}, Image path: {$item->displayImage}");
+    }
+    
+    $total = $this->calculateCartTotal($cartItems);
+    $orderNumber = 'ORD-' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+    
+    // Store order information in session for the receipt page
+    session([
+        'order_summary' => [
+            'order_number' => $orderNumber,
+            'order_date' => now()->format('M d, Y h:i A'),
+            'items' => $cartItems,
+            'total' => $total
+        ]
+    ]);
+    
+    return view('checkout-summary', [
+        'orderNumber' => $orderNumber,
+        'orderDate' => now()->format('M d, Y h:i A'),
+        'cartItems' => $cartItems,
+        'total' => $total,
+        'user' => Auth::user()
+    ]);
+}
     /**
      * Complete the checkout process and clear the cart
      * 

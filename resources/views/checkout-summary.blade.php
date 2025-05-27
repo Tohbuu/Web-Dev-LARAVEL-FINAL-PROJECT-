@@ -140,7 +140,10 @@
             @foreach($cartItems as $item)
                 <div class="order-item">
                     <div class="item-details">
-                        <img src="{{ asset($item->displayImage ?? 'images/pizza-placeholder.png') }}" alt="{{ $item->item }}" class="item-image">
+                        <img src="{{ asset($item->displayImage ?? 'images/pizza-placeholder.png') }}" 
+                             alt="{{ $item->item }}" 
+                             class="item-image"
+                             onerror="this.onerror=null; this.src='{{ asset('images/pizza-placeholder.png') }}';">
                         <div>
                             <h4>{{ $item->item }}</h4>
                             <p>Size: {{ ucfirst($item->size) }}</p>
