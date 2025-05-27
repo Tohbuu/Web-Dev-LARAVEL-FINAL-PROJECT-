@@ -262,4 +262,40 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize with the first pizza
     updateOrderForm(0);
+    
+    // Handle URL parameters
+    handleUrlParameters();
 });
+
+// Add this function to handle URL parameters for pizza selection
+function handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pizzaParam = urlParams.get('pizza');
+    
+    if (pizzaParam !== null) {
+        const pizzaIndex = parseInt(pizzaParam);
+        if (!isNaN(pizzaIndex)) {
+            // Update the order form with the selected pizza
+            updateOrderForm(pizzaIndex);
+            
+            // Update the slider position
+            const sliderWrapper = document.querySelector('.sliderWrapper');
+            if (sliderWrapper) {
+                sliderWrapper.style.transition = 'transform 0.5s ease';
+                sliderWrapper.style.transform = `translateX(${-100 * pizzaIndex}vw)`;
+            }
+            
+            // Update active menu item
+            const menuItems = document.querySelectorAll('.menuItem');
+            menuItems.forEach((item, i) => {
+                if (i === pizzaIndex) {
+                    item.classList.add('active');
+                    item.setAttribute('aria-selected', 'true');
+                } else {
+                    item.classList.remove('active');
+                    item.setAttribute('aria-selected', 'false');
+                }
+            });
+        }
+    }
+}
