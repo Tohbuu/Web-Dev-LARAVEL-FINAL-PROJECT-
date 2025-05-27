@@ -108,7 +108,11 @@
     <nav class="shiny-pearl">
         <div class="navTop">
             <div class="navItem">
-                <h1>{{ htmlspecialchars($user['username'] ?? 'Guest') }}</h1>
+                @if(Auth::check())
+                    <h1 class="welcome-title">Welcome, {{ htmlspecialchars(Auth::user()->name) }}!</h1>
+                @else
+                    <h1>{{ htmlspecialchars($user['username'] ?? 'Guest') }}</h1>
+                @endif
             </div>
             <div class="navItem">
                 @if(Auth::check())
@@ -126,7 +130,11 @@
                     @endif
                 </a>
                 <a href="{{ route('profile.dashboard') }}" class="user">
-                    <i class='bx bx-user-circle icon'></i>
+                    @if(Auth::check() && Auth::user()->avatar)
+                        <img src="{{ Auth::user()->avatar }}&t={{ time() }}" alt="{{ Auth::user()->username }}" class="user-avatar">
+                    @else
+                        <i class='bx bx-user-circle icon'></i>
+                    @endif
                 </a>
             </div>
         </div>
@@ -343,6 +351,42 @@
         }
     });
     </script>
+
+    <!-- Force Google avatar to display properly -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find all avatar images
+    const avatars = document.querySelectorAll('.user-avatar');
+    
+    avatars.forEach(avatar => {
+        // Check if it's a Google avatar
+        if (avatar.src && avatar.src.includes('googleusercontent.com')) {
+            console.log('Processing Google avatar:', avatar.src);
+            
+            // Remove any existing query parameters
+            const originalSrc = avatar.src.split('?')[0];
+            
+            // Generate unique parameters
+            const timestamp = new Date().getTime();
+            const random = Math.random().toString(36).substring(2, 15);
+            
+            // Create a new URL with size parameter and cache busters
+            const newSrc = `${originalSrc}?sz=100&t=${timestamp}&r=${random}`;
+            console.log('New avatar URL:', newSrc);
+            
+            // Update the image source
+            avatar.src = newSrc;
+            
+            // Add error handling
+            avatar.onerror = function() {
+                console.log('Avatar failed to load, trying default:', this.alt);
+                this.src = '{{ asset('images/default-avatar.png') }}?v=' + new Date().getTime();
+                this.onerror = null; // Prevent infinite error loop
+            };
+        }
+    });
+});
+</script>
 
     @vite(['resources/js/app.js'])
 </body>
